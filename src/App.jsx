@@ -1,12 +1,15 @@
 import { useState } from "react";
 import "./App.css";
+import Navbar from "./components/navbar";
+import Manager from "./components/manager";
 
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <>
-      <div className="container">this is my password manager</div>
+      <Navbar />
+      <Manager />
     </>
   );
 }
