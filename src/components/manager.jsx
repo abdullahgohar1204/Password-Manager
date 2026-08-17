@@ -12,11 +12,14 @@ const Manager = () => {
   const [form, setform] = useState({ site: "", username: "", password: "" });
   const [passwordArray, setpasswordArray] = useState([]);
 
+  const getPassword = async () => {
+    let result = await fetch("http://localhost:3000/");
+    let show = await result.json();
+    setpasswordArray(show);
+  };
+
   useEffect(() => {
-    let passwords = localStorage.getItem("passwords");
-    if (passwords) {
-      setpasswordArray(JSON.parse(passwords));
-    }
+    getPassword();
   }, []);
 
   const showPassword = () => {
@@ -29,29 +32,50 @@ const Manager = () => {
     }
   };
 
-  const savePassword = () => {
+  const savePassword = async () => {
     if (!form.site || !form.username || !form.password) {
       alert("Please fill in all fields before saving.");
       return;
     }
-    const newArray = [...passwordArray, { ...form, id: uuidv4() }];
-    setpasswordArray(newArray);
-    localStorage.setItem("passwords", JSON.stringify(newArray));
+    let res = await fetch("http://localhost:3000", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...form, uuid: uuidv4() }),
+    });
+
     setform({ site: "", username: "", password: "" });
+    getPassword();
   };
 
-  const deleteItem = (id) => {
-    const newArray = passwordArray.filter((item) => item.id !== id);
+  const deleteItem = async (uuid) => {
+    const newArray = passwordArray.filter((item) => item.uuid !== uuid);
     setpasswordArray(newArray);
-    localStorage.setItem("passwords", JSON.stringify(newArray));
+    let res = await fetch("http://localhost:3000", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ uuid }),
+    });
   };
 
-  const editItem = (id) => {
-    const item_to_edit = passwordArray.filter((i) => i.id === id)[0];
+  const editItem = async (uuid) => {
+    const item_to_edit = passwordArray.filter((i) => i.uuid === uuid)[0];
+
     setform(item_to_edit);
-    const newArray = passwordArray.filter((i) => i.id !== id);
+
+    const newArray = passwordArray.filter((i) => i.uuid !== uuid);
     setpasswordArray(newArray);
-    localStorage.setItem("passwords", JSON.stringify(newArray));
+
+    await fetch("http://localhost:3000", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ uuid }),
+    });
   };
 
   const handleChange = (e) => {
@@ -218,7 +242,7 @@ const Manager = () => {
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => {
-                              editItem(item.id);
+                              editItem(item.uuid);
                             }}
                             className="px-3 py-1.5 rounded-lg text-cyan-400
                       border border-cyan-500/30
@@ -230,7 +254,7 @@ const Manager = () => {
 
                           <button
                             onClick={() => {
-                              deleteItem(item.id);
+                              deleteItem(item.uuid);
                             }}
                             className="px-3 py-1.5 rounded-lg text-red-400
                       border border-red-500/30
